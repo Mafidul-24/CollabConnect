@@ -1,58 +1,63 @@
-// Grab input fields
+// app.js
+import { auth, db } from './firebase-config.js';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  addDoc,
+  collection,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const projectForm = document.getElementById("project-form");
 
-// ✅ Sign Up Function
-function signUp() {
-  auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value)
+window.signUp = function () {
+  createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
     .then((userCredential) => {
-      console.log("✅ Signed up:", userCredential);
       alert("✅ Signed up!");
       projectForm.style.display = "block";
     })
-    .catch(error => {
-      console.error("❌ Sign-up error:", error);
+    .catch((error) => {
       alert("❌ " + error.message);
     });
-}
+};
 
-// ✅ Login Function
-function login() {
-  auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value)
+window.login = function () {
+  signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value)
     .then(() => {
       alert("✅ Logged in!");
       projectForm.style.display = "block";
     })
-    .catch(error => alert("❌ " + error.message));
-}
+    .catch((error) => {
+      alert("❌ " + error.message);
+    });
+};
 
-// ✅ Submit Idea to Firestore
-function submitIdea() {
+window.submitIdea = function () {
   const idea = document.getElementById("projectIdea").value;
   const user = auth.currentUser;
 
   if (!user) {
-    alert("⚠️ You must be logged in to submit an idea.");
+    alert("Please login first.");
     return;
   }
 
-  db.collection("projects").add({
+  addDoc(collection(db, "projects"), {
     uid: user.uid,
     idea: idea,
-    timestamp: Date.now()
-  }).then(() => alert("✅ Project submitted!"));
-}
+    timestamp: serverTimestamp()
+  }).then(() => {
+    alert("✅ Idea submitted!");
+  });
+};
 
-// ✅ Improve Idea using Fallback (No API Key Required)
-function improveIdea() {
-  const raw = document.getElementById("projectIdea").value;
-
-  // Fake AI improvement response
-  const fakeImproved = `🔧 AI-enhanced: "${raw}" now sounds more impactful. Consider turning it into a collaborative research platform with matching and rating systems.`;
-
-  document.getElementById("improvedOutput").innerText = fakeImproved;
-
-  // Optional alert to indicate this is a mock
-  alert("⚠️ Gemini API quota exceeded. Showing dummy AI-enhanced output.");
-}
+window.improveIdea = function () {
+  const idea = document.getElementById("projectIdea").value;
+  const improved = `🔧 Improved: "${idea}" now sounds more compelling and collaborative. Consider research role matching, tagging, or voting systems.`;
+  document.getElementById("improvedOutput").innerText = improved;
+  alert("⚠️ Gemini API not available — fallback enhancement shown.");
+};
